@@ -1,0 +1,6 @@
+{
+  "//": "The core entry must run in Deno edge functions and Node with no DOM. Type-checking it WITHOUT the DOM library makes any use of document, window, Image or canvas a compile error.",
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "lib": ["ES2022"], "types": [] },
+  "include": ["src/core"]
+}

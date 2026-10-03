@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>brand-kit smoke</title>
+<script type="importmap">{ "imports": { "dompurify": "/node_modules/dompurify/dist/purify.es.mjs" } }</script>
+</head>
+<body>
+<pre id="out">running…</pre>
+<div id="imgs"></div>
+<script type="module">
+import { prepareLogo } from '/dist/browser/index.js'
+import { deriveTheme, emailHeaderHtml } from '/dist/core/index.js'
+
+const out = []
+const log = (o) => { out.push(o); document.getElementById('out').textContent = JSON.stringify(out, null, 1) }
+const show = (blob, label) => { const i = new Image(); i.src = URL.createObjectURL(blob); i.title = label; i.style = 'border:1px solid #ccc;margin:4px;background:#eee'; document.getElementById('imgs').append(i) }
+
+// 1. A real PNG: a dark-blue wide wordmark-ish shape on a transparent background with margins.
+const c = document.createElement('canvas'); c.width = 900; c.height = 300
+const g = c.getContext('2d')
+g.fillStyle = '#0b3d91'; g.fillRect(150, 100, 600, 100)
+g.fillStyle = '#e8a33d'; g.beginPath(); g.arc(200, 150, 40, 0, Math.PI * 2); g.fill()
+const png = await new Promise((r) => c.toBlob(r, 'image/png'))
+try {
+  const p = await prepareLogo(new File([png], 'wordmark.png', { type: 'image/png' }), 'logo')
+  p.renditions.forEach((r) => show(r.blob, r.name))
+  log({ case: 'png', aspect: +p.aspect.toFixed(3), tone: p.tone, palette: p.palette.slice(0, 3), renditions: p.renditions.map((r) => `${r.name} ${r.width}x${r.height} ${r.blob.size}B`), problems: p.problems.map((x) => x.severity + ': ' + x.message) })
+} catch (e) { log({ case: 'png', error: String(e), problems: e.problems }) }
+
+// 2. A real SVG with something hostile inside, used as a square mark.
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" onload="alert(1)"><script>alert(2)<\/script><style>.a{fill:#c0392b}</style><rect class="a" x="8" y="8" width="48" height="48" rx="8"/><circle cx="32" cy="32" r="12" fill="#fff"/></svg>`
+try {
+  const p = await prepareLogo(new File([svg], 'mark.svg', { type: 'image/svg+xml' }), 'mark')
+  p.renditions.forEach((r) => show(r.blob, r.name))
+  const cleaned = await p.original.blob.text()
+  log({ case: 'svg', aspect: +p.aspect.toFixed(3), tone: p.tone, renditions: p.renditions.map((r) => `${r.name} ${r.width}x${r.height}`), cleanedHasScript: /script|onload/i.test(cleaned), problems: p.problems.map((x) => x.severity + ': ' + x.message) })
+} catch (e) { log({ case: 'svg', error: String(e), problems: e.problems }) }
+
+// 3. A hostile SVG that should be refused or cleaned, never pass through.
+const evil = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><foreignObject><iframe src="https://evil.example"></iframe></foreignObject><image href="https://evil.example/x.png" width="64" height="64"/></svg>`
+try {
+  const p = await prepareLogo(new File([evil], 'evil.svg', { type: 'image/svg+xml' }), 'mark')
+  log({ case: 'evil', passed: true, cleanedHasExternal: /evil\.example|foreignObject|iframe/i.test(await p.original.blob.text()), problems: p.problems.map((x) => x.severity + ': ' + x.message) })
+} catch (e) { log({ case: 'evil', refused: String(e).slice(0, 200) }) }
+
+window.__done = true
+</script>
+</body>
+</html>

@@ -1,0 +1,711 @@
+/*
+ * @skydrivehq/brand-kit: the drop-in screen's stylesheet.
+ *
+ * Self-contained on purpose. Every selector starts with `.bk-`, there are no element or `:root` rules, and
+ * the previews set their own font, colour and background, so the screen looks the same whether the host
+ * product uses Tailwind v4 (DZGO) or plain CSS (Rigging, SkyWeather).
+ *
+ * A product re-skins the editor chrome by overriding the `--bk-*` variables on `.bk-root`. The previews do
+ * NOT use them: a preview shows the customer's brand on a neutral mock-up, never the host product's look.
+ */
+
+.bk-root {
+  --bk-font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --bk-bg: #ffffff;
+  --bk-panel: #f8f8f9;
+  --bk-fg: #18181b;
+  --bk-muted: #52525b;
+  --bk-border: #d4d4d8;
+  --bk-focus: #2563eb;
+  --bk-primary: #18181b;
+  --bk-primary-ink: #ffffff;
+  --bk-danger: #b91c1c;
+  --bk-warning: #92400e;
+  --bk-ok: #166534;
+  --bk-radius: 8px;
+
+  box-sizing: border-box;
+  font-family: var(--bk-font);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--bk-fg);
+  background: var(--bk-bg);
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.bk-root *,
+.bk-root *::before,
+.bk-root *::after {
+  box-sizing: inherit;
+}
+
+.bk-root :focus-visible {
+  outline: 2px solid var(--bk-focus);
+  outline-offset: 2px;
+}
+
+.bk-visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.bk-h2 {
+  font-size: 16px;
+  font-weight: 650;
+  margin: 0 0 8px;
+}
+
+.bk-h3 {
+  font-size: 14px;
+  font-weight: 650;
+  margin: 0 0 4px;
+}
+
+.bk-p {
+  margin: 0 0 8px;
+}
+
+.bk-muted {
+  color: var(--bk-muted);
+}
+
+.bk-section {
+  border: 1px solid var(--bk-border);
+  border-radius: var(--bk-radius);
+  padding: 16px;
+  background: var(--bk-bg);
+  min-width: 0;
+}
+
+.bk-layout {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 960px) {
+  .bk-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.bk-stack {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+/* ---------------------------------------------------------------- buttons and inputs */
+
+.bk-btn {
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 14px;
+  border-radius: var(--bk-radius);
+  border: 1px solid var(--bk-border);
+  background: var(--bk-bg);
+  color: var(--bk-fg);
+  cursor: pointer;
+}
+
+.bk-btn:hover:not(:disabled) {
+  background: var(--bk-panel);
+}
+
+.bk-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.bk-btn-primary {
+  background: var(--bk-primary);
+  border-color: var(--bk-primary);
+  color: var(--bk-primary-ink);
+  font-weight: 600;
+}
+
+.bk-btn-primary:hover:not(:disabled) {
+  background: var(--bk-primary);
+  filter: brightness(1.15);
+}
+
+.bk-btn-danger {
+  color: var(--bk-danger);
+}
+
+.bk-btn-small {
+  min-height: 30px;
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+.bk-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.bk-field {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.bk-label {
+  font-weight: 600;
+}
+
+.bk-hint {
+  font-size: 12px;
+  color: var(--bk-muted);
+}
+
+.bk-input,
+.bk-select {
+  font: inherit;
+  color: var(--bk-fg);
+  background: var(--bk-bg);
+  border: 1px solid var(--bk-border);
+  border-radius: var(--bk-radius);
+  padding: 7px 10px;
+  min-height: 36px;
+  width: 100%;
+  min-width: 0;
+}
+
+.bk-input[aria-invalid='true'] {
+  border-color: var(--bk-danger);
+}
+
+.bk-field-error {
+  font-size: 12px;
+  color: var(--bk-danger);
+}
+
+/* ---------------------------------------------------------------- status bar */
+
+.bk-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: var(--bk-radius);
+  border: 1px solid var(--bk-border);
+  background: var(--bk-panel);
+}
+
+.bk-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 650;
+  border: 1px solid currentColor;
+}
+
+.bk-badge-draft {
+  color: var(--bk-warning);
+  background: #fffbeb;
+}
+
+.bk-badge-live {
+  color: var(--bk-ok);
+  background: #f0fdf4;
+}
+
+.bk-error {
+  color: var(--bk-danger);
+  border: 1px solid var(--bk-danger);
+  background: #fef2f2;
+  border-radius: var(--bk-radius);
+  padding: 10px 12px;
+}
+
+/* ---------------------------------------------------------------- drop zone */
+
+.bk-dropzone {
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  text-align: center;
+  padding: 28px 16px;
+  border: 2px dashed var(--bk-border);
+  border-radius: var(--bk-radius);
+  background: var(--bk-panel);
+  cursor: pointer;
+}
+
+.bk-dropzone:hover,
+.bk-dropzone-active {
+  border-color: var(--bk-focus);
+  background: #eff6ff;
+}
+
+.bk-dropzone-title {
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.bk-uploads {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.bk-upload {
+  border: 1px solid var(--bk-border);
+  border-radius: var(--bk-radius);
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.bk-upload-failed {
+  border-color: var(--bk-danger);
+}
+
+.bk-upload-name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* ---------------------------------------------------------------- logo slots */
+
+.bk-slots {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.bk-slot {
+  border: 1px solid var(--bk-border);
+  border-radius: var(--bk-radius);
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-width: 0;
+}
+
+.bk-slot-preview {
+  height: 88px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  background: #f4f4f5;
+  overflow: hidden;
+}
+
+.bk-slot-preview-dark {
+  background: #111111;
+}
+
+.bk-slot-preview img {
+  max-width: 90%;
+  max-height: 64px;
+  object-fit: contain;
+}
+
+.bk-slot-empty {
+  font-size: 12px;
+  color: #71717a;
+}
+
+.bk-slot-file {
+  font-size: 12px;
+  color: var(--bk-muted);
+  overflow-wrap: anywhere;
+}
+
+/* ---------------------------------------------------------------- colours */
+
+.bk-color-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bk-color-native {
+  width: 44px;
+  height: 36px;
+  padding: 2px;
+  border: 1px solid var(--bk-border);
+  border-radius: var(--bk-radius);
+  background: var(--bk-bg);
+  cursor: pointer;
+  flex: none;
+}
+
+.bk-color-row .bk-input {
+  max-width: 140px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.bk-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.bk-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  padding: 0;
+}
+
+.bk-swatch[aria-pressed='true'] {
+  box-shadow: 0 0 0 2px var(--bk-bg), 0 0 0 4px var(--bk-fg);
+}
+
+.bk-font-sample {
+  font-size: 20px;
+  padding: 6px 0 0;
+  overflow-wrap: anywhere;
+}
+
+/* ---------------------------------------------------------------- problems */
+
+.bk-problems {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.bk-problem {
+  border-left: 3px solid var(--bk-border);
+  padding: 4px 0 4px 10px;
+  font-size: 13px;
+}
+
+.bk-problem-refused {
+  border-left-color: var(--bk-danger);
+}
+
+.bk-problem-repaired {
+  border-left-color: var(--bk-ok);
+}
+
+.bk-problem-warning {
+  border-left-color: var(--bk-warning);
+}
+
+.bk-problem-kind {
+  font-weight: 650;
+  margin-right: 4px;
+}
+
+/* ---------------------------------------------------------------- history */
+
+.bk-history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.bk-history-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid var(--bk-border);
+  border-radius: var(--bk-radius);
+  padding: 8px 10px;
+}
+
+/* ---------------------------------------------------------------- previews
+ * Mock-ups of real surfaces. They set every font, colour and background themselves so the host page's CSS
+ * cannot leak in, and read the brand from the --brand-* variables `themeCssVars` produces.
+ */
+
+.bk-previews {
+  display: grid;
+  gap: 14px;
+}
+
+.bk-preview {
+  margin: 0;
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.bk-preview-caption {
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--bk-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.bk-preview-note {
+  font-size: 12px;
+  color: var(--bk-muted);
+}
+
+.bk-mock {
+  --bk-mock-font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--bk-mock-font);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #d4d4d8;
+  min-width: 0;
+}
+
+.bk-mock-heading {
+  font-family: var(--brand-font-heading, var(--bk-mock-font));
+  font-weight: 700;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.bk-mock-logo {
+  display: block;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.bk-mock-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+/* Web page header (light, or dark for web-dark). */
+.bk-mock-web {
+  background: #ffffff;
+  color: #18181b;
+}
+
+.bk-mock-web-dark {
+  background: #111111;
+  color: #f4f4f5;
+  border-color: #27272a;
+}
+
+.bk-mock-web-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.25);
+}
+
+.bk-mock-web-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.bk-mock-web-brand .bk-mock-logo {
+  max-height: 32px;
+  width: auto;
+}
+
+.bk-mock-web-brand .bk-mock-heading {
+  font-size: 18px;
+}
+
+.bk-mock-web-nav {
+  display: flex;
+  gap: 12px;
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+.bk-mock-web-body {
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+
+.bk-mock-web-body .bk-mock-heading {
+  font-size: 20px;
+}
+
+.bk-mock-tagline {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.bk-mock-button {
+  display: inline-block;
+  font: 600 13px/1 var(--bk-mock-font);
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: var(--brand-accent, #3f3f46);
+  color: var(--brand-accent-ink, #ffffff);
+  border: 0;
+}
+
+.bk-mock-pill {
+  display: inline-block;
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--brand-accent-soft, #f4f4f5);
+  color: #18181b;
+}
+
+/* Hangar TV header (dark). */
+.bk-mock-tv {
+  background: #111111;
+  color: #fafafa;
+  border-color: #27272a;
+}
+
+.bk-mock-tv-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 4px solid var(--brand-accent, #a1a1aa);
+}
+
+.bk-mock-tv-bar .bk-mock-logo {
+  max-height: 40px;
+  width: auto;
+}
+
+.bk-mock-tv-bar .bk-mock-heading {
+  font-size: 24px;
+}
+
+.bk-mock-tv-clock {
+  font: 700 24px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: #fafafa;
+}
+
+.bk-mock-tv-rows {
+  padding: 12px 20px 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.bk-mock-tv-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 15px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #1f1f23;
+}
+
+.bk-mock-tv-row strong {
+  color: var(--brand-accent, #e4e4e7);
+}
+
+/* Email (the iframe draws its own content from emailHeaderHtml). */
+.bk-mock-email {
+  background: #f4f4f5;
+}
+
+.bk-mock-email-frame {
+  display: block;
+  width: 100%;
+  height: 260px;
+  border: 0;
+  background: #f4f4f5;
+}
+
+/* PDF header (paper). */
+.bk-mock-pdf {
+  background: #e4e4e7;
+  padding: 14px;
+  border-color: #d4d4d8;
+}
+
+.bk-mock-paper {
+  background: #ffffff;
+  color: #18181b;
+  padding: 18px 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+.bk-mock-paper-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--brand-accent, #3f3f46);
+}
+
+.bk-mock-paper-head .bk-mock-logo {
+  max-height: 40px;
+  width: auto;
+}
+
+.bk-mock-paper-name {
+  font: 700 16px/1.2 Helvetica, Arial, sans-serif;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.bk-mock-paper-meta {
+  font-size: 11px;
+  color: #52525b;
+  text-align: right;
+}
+
+.bk-mock-paper-lines {
+  display: grid;
+  gap: 6px;
+  padding-top: 12px;
+}
+
+.bk-mock-paper-line {
+  height: 6px;
+  border-radius: 3px;
+  background: #e4e4e7;
+}
+
+.bk-mock-powered {
+  font-size: 11px;
+  opacity: 0.7;
+  padding: 6px 16px 10px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bk-btn,
+  .bk-dropzone {
+    transition: background-color 120ms ease, border-color 120ms ease;
+  }
+}
