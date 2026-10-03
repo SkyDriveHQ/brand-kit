@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" onload="alert('svg onload')" width="520" height="160" viewBox="0 0 520 160">
+  <title>SkyDrive (MOCK brand kit for testing)</title>
+  <defs>
+    <linearGradient id="canopy" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5eb0ff"/>
+      <stop offset="1" stop-color="#2f7fd8"/>
+    </linearGradient>
+  </defs>
+  <g stroke="#6b7a99" stroke-width="3" stroke-linecap="round">
+    <line x1="16" y1="88" x2="80" y2="136"/>
+    <line x1="48" y1="88" x2="80" y2="136"/>
+    <line x1="112" y1="88" x2="80" y2="136"/>
+    <line x1="144" y1="88" x2="80" y2="136"/>
+  </g>
+  <path fill="url(#canopy)" d="M16 88 C16 40 144 40 144 88 C136 80 120 80 112 88 C104 80 88 80 80 88 C72 80 56 80 48 88 C40 80 24 80 16 88 Z"/>
+  <circle cx="80" cy="140" r="9" fill="#ffb454"/>
+  <text x="172" y="112" font-family="Inter, 'Segoe UI', Roboto, Arial, sans-serif" font-size="80" font-weight="700" letter-spacing="-2" fill="#0b1220">SkyDrive</text>
+  <script>alert("script inside a logo")</script>
+  <a xlink:href="https://evil.example/"><rect x="0" y="0" width="1" height="1" fill="none"/></a>
+</svg>

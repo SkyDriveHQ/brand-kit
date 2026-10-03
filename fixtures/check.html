@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>brand-kit fixture check</title>
+<script type="importmap">{ "imports": { "dompurify": "/node_modules/dompurify/dist/purify.es.mjs" } }</script>
+</head>
+<body>
+<pre id="out">running…</pre>
+<script type="module">
+// Runs every file in fixtures/skydrive-mock-kit through the real engine, as a customer's drop would.
+// Serve the package root (python -m http.server 8765 --bind 127.0.0.1) after `npm run build`, open
+// /fixtures/check.html, and compare with the table in fixtures/skydrive-mock-kit/README.md.
+import { prepareGuide, prepareLogo } from '/dist/browser/index.js'
+import { deriveTheme, emptyKit } from '/dist/core/index.js'
+
+const TYPES = { svg: 'image/svg+xml', png: 'image/png', jpg: 'image/jpeg', pdf: 'application/pdf' }
+const base = '/fixtures/skydrive-mock-kit/'
+const cases = [
+  ['logo.svg', 'logo'], ['logo-on-dark.svg', 'logoOnDark'], ['mark.svg', 'mark'],
+  ['logo.png', 'logo'], ['logo-on-dark.png', 'logoOnDark'], ['mark.png', 'mark'],
+  ['brand-guide.pdf', 'guide'],
+  ['bad-files/logo-with-script.svg', 'logo'], ['bad-files/external-only.svg', 'logo'],
+  ['bad-files/tiny-logo.png', 'logo'], ['bad-files/jpeg-named-as.png', 'logo'],
+  ['bad-files/not-a-pdf.pdf', 'guide'], ['bad-files/tall-logo.png', 'logo'],
+]
+const results = []
+for (const [path, slot] of cases) {
+  document.getElementById('out').textContent = 'working on ' + path + ' (' + results.length + ' done)'
+  window.__current = path
+  const bytes = await (await fetch(base + path)).arrayBuffer()
+  const name = path.split('/').pop()
+  const file = new File([bytes], name, { type: TYPES[name.split('.').pop()] ?? '' })
+  try {
+    if (slot === 'guide') {
+      const g = await prepareGuide(file)
+      results.push({ file: path, outcome: 'accepted', detail: `${g.bytes} bytes` })
+    } else {
+      const p = await prepareLogo(file, slot)
+      results.push({
+        file: path, outcome: 'accepted', slot,
+        aspect: +p.aspect.toFixed(2), luminance: +p.tone.luminance.toFixed(2), transparent: p.tone.transparent,
+        sizes: p.renditions.length, palette: p.palette.slice(0, 3).map((c) => c.hex).join(' '),
+        problems: p.problems.map((x) => `${x.severity}: ${x.message}`),
+      })
+    }
+  } catch (e) {
+    results.push({ file: path, outcome: 'refused', why: (e.problems?.map((x) => x.message).join(' ') || String(e)).slice(0, 220) })
+  }
+}
+// The kit's colours, as the customer would type them from the brand guide.
+const kit = { ...emptyKit(), name: 'SkyDrive', colors: { primary: '#5eb0ff', secondary: '#ffb454' }, fonts: { heading: 'inter' } }
+const identity = { product: 'test', productName: 'Test', poweredByLabel: 'Powered by SkyDrive', fallbackAccent: '#2563eb' }
+for (const surface of ['web-light', 'tv']) {
+  const t = deriveTheme(kit, identity, { surface, fallbackName: 'Skydive Testharness' })
+  results.push({ theme: surface, colors: t.colors, headingFont: t.headingFont, problems: t.problems.map((x) => `${x.severity}: ${x.message}`) })
+}
+document.getElementById('out').textContent = JSON.stringify(results, null, 1)
+window.__results = results
+</script>
+</body>
+</html>
