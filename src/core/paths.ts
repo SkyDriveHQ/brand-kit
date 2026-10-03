@@ -17,6 +17,21 @@ const ORIGIN = /^https:\/\/[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[
 export const ORIGINAL_EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp', 'svg'] as const
 export type OriginalExtension = (typeof ORIGINAL_EXTENSIONS)[number]
 
+/**
+ * A version id: a lower-case uuid. `sql/brand_kit.sql` generates version ids with `gen_random_uuid()`, and
+ * its storage policies accept an upload only under a uuid-shaped version folder. The path builders and
+ * checks here require the same shape, so a path this module accepts is one the database also accepts.
+ */
+export const VERSION_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+
+export function isVersionId(s: unknown): s is string {
+  return typeof s === 'string' && VERSION_ID_RE.test(s)
+}
+
+function assertVersionId(value: unknown): asserts value is string {
+  if (!isVersionId(value)) throw new Error('Invalid versionId: must be a lower-case uuid (the id brand_kit_versions generates)')
+}
+
 export function isSafeSegment(s: unknown): s is string {
   return typeof s === 'string' && SEGMENT.test(s)
 }
@@ -57,7 +72,7 @@ function assertSha(value: string): void {
 /** `${tenantId}/${versionId}/${sha256}.png`, in the public bucket. */
 export function publicAssetPath(rules: BrandStorageRules, versionId: string, sha256: string): string {
   assertRules(rules)
-  assertSegment('versionId', versionId)
+  assertVersionId(versionId)
   assertSha(sha256)
   return `${rules.tenantId}/${versionId}/${sha256}.png`
 }
@@ -72,7 +87,7 @@ export function publicAssetUrl(rules: BrandStorageRules, path: string): string {
 /** `${tenantId}/${versionId}/original-${sha256}.${ext}`, in the private bucket. */
 export function originalPath(rules: BrandStorageRules, versionId: string, sha256: string, ext: string): string {
   assertRules(rules)
-  assertSegment('versionId', versionId)
+  assertVersionId(versionId)
   assertSha(sha256)
   if (!(ORIGINAL_EXTENSIONS as readonly string[]).includes(ext)) {
     throw new Error(`Invalid extension: must be one of ${ORIGINAL_EXTENSIONS.join(', ')}`)
@@ -83,7 +98,7 @@ export function originalPath(rules: BrandStorageRules, versionId: string, sha256
 /** `${tenantId}/${versionId}/guide-${sha256}.pdf`, in the private bucket. */
 export function guidePath(rules: BrandStorageRules, versionId: string, sha256: string): string {
   assertRules(rules)
-  assertSegment('versionId', versionId)
+  assertVersionId(versionId)
   assertSha(sha256)
   return `${rules.tenantId}/${versionId}/guide-${sha256}.pdf`
 }
@@ -99,7 +114,7 @@ function isOwnPublicAssetPath(path: string, rules: BrandStorageRules): boolean {
   const parts = path.slice(prefix.length).split('/')
   if (parts.length !== 2) return false
   const [version, file] = parts
-  if (!isSafeSegment(version) || typeof file !== 'string' || !file.endsWith('.png')) return false
+  if (!isVersionId(version) || typeof file !== 'string' || !file.endsWith('.png')) return false
   return isSha256Hex(file.slice(0, -4))
 }
 
@@ -125,6 +140,8 @@ export function isOwnPrivatePath(path: unknown, rules: BrandStorageRules): boole
   const prefix = `${rules.tenantId}/`
   if (!path.startsWith(prefix)) return false
   const parts = path.slice(prefix.length).split('/')
-  if (parts.length < 1 || parts.length > 4) return false
+  if (parts.length < 2 || parts.length > 4) return false
+  // The first folder under the tenant is the version, as in the public bucket and the SQL policies.
+  if (!isVersionId(parts[0])) return false
   return parts.every((p) => /^[A-Za-z0-9_-][A-Za-z0-9._-]{0,199}$/.test(p) && !p.includes('..'))
 }

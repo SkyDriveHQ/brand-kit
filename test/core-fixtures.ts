@@ -15,7 +15,7 @@ export const identity: ProductIdentity = {
   fallbackAccent: '#2563eb',
 }
 
-export const VERSION = 'v-0001'
+export const VERSION = '0b5c1f8e-7d1a-4c55-9f1e-3a1b2c3d4e5f'
 
 /** A deterministic 64-hex "hash" for a name. */
 export function sha(seed: string): string {

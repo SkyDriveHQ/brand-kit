@@ -82,7 +82,7 @@ export function fakeStore(initial: { live?: BrandKit; draft?: BrandKit } = {}): 
     n += 1
     const at = tick()
     return {
-      id: `v${n}`,
+      id: `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`,
       tenantId: RULES.tenantId,
       state,
       kit: clone(kit),

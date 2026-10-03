@@ -184,7 +184,7 @@ class FakeQuery implements QueryLike {
     }
     if (this.op === 'insert') {
       db.beforeInsert?.()
-      const row: Row = { id: `v${db.nextId++}`, state: 'draft', created_at: db.now(), created_by: 'user-1', published_at: null, published_by: null, ...this.values }
+      const row: Row = { id: `00000000-0000-4000-8000-${String(db.nextId++).padStart(12, '0')}`, state: 'draft', created_at: db.now(), created_by: 'user-1', published_at: null, published_by: null, ...this.values }
       if (this.table === 'brand_kit_versions' && rows.some((r) => r.tenant_id === row.tenant_id && r.state === 'draft')) {
         return { data: null, error: { message: 'duplicate key value violates unique constraint "brand_kit_versions_one_draft"', code: '23505' } }
       }
@@ -261,7 +261,7 @@ const callsOf = (kind: Call['kind']) => db.calls.filter((c) => c.kind === kind)
 describe('createDraft / loadDraft / loadLive', () => {
   it('starts an empty draft when nothing is live, inserting only the granted columns', async () => {
     const draft = await store.createDraft()
-    expect(draft).toMatchObject({ id: 'v1', tenantId: 'site-1', state: 'draft', basedOn: null, kit: emptyKit() })
+    expect(draft).toMatchObject({ id: '00000000-0000-4000-8000-000000000001', tenantId: 'site-1', state: 'draft', basedOn: null, kit: emptyKit() })
     expect(callsOf('insert')).toEqual([
       { kind: 'insert', target: 'brand_kit_versions', values: { tenant_id: 'site-1', kit: emptyKit(), based_on: null }, filters: [] },
     ])
@@ -271,17 +271,17 @@ describe('createDraft / loadDraft / loadLive', () => {
 
   it('starts a draft from a deep copy of the live kit', async () => {
     const kit: BrandKit = { ...emptyKit(), name: 'Acme Skydiving', colors: { primary: '#cc0000' } }
-    db.seed({ id: 'p1', state: 'published', kit })
-    db.tables.brand_kit_live?.push({ tenant_id: 'site-1', version_id: 'p1' })
+    db.seed({ id: '00000000-0000-4000-8000-0000000000a1', state: 'published', kit })
+    db.tables.brand_kit_live?.push({ tenant_id: 'site-1', version_id: '00000000-0000-4000-8000-0000000000a1' })
     const draft = await store.createDraft()
-    expect(draft.basedOn).toBe('p1')
+    expect(draft.basedOn).toBe('00000000-0000-4000-8000-0000000000a1')
     expect(draft.kit).toEqual(kit)
     expect(draft.kit).not.toBe(kit)
   })
 
   it('returns the existing draft instead of making a second', async () => {
-    db.seed({ id: 'd1', state: 'draft' })
-    expect((await store.createDraft()).id).toBe('d1')
+    db.seed({ id: '00000000-0000-4000-8000-0000000000d1', state: 'draft' })
+    expect((await store.createDraft()).id).toBe('00000000-0000-4000-8000-0000000000d1')
     expect(callsOf('insert')).toEqual([])
   })
 
@@ -294,14 +294,14 @@ describe('createDraft / loadDraft / loadLive', () => {
   })
 
   it('reads stored rows leniently: a bad stored value is dropped, not fatal', async () => {
-    db.seed({ id: 'd1', state: 'draft', kit: { schemaVersion: 1, name: 'Acme', colors: { primary: 'javascript:alert(1)' }, logos: {}, fonts: {} } })
+    db.seed({ id: '00000000-0000-4000-8000-0000000000d1', state: 'draft', kit: { schemaVersion: 1, name: 'Acme', colors: { primary: 'javascript:alert(1)' }, logos: {}, fonts: {} } })
     const draft = await store.loadDraft()
     expect(draft?.kit.name).toBe('Acme')
     expect(draft?.kit.colors).toEqual({})
   })
 
   it('refuses a row that belongs to another tenant (if RLS or the filter ever let one through)', async () => {
-    const stranger = { id: 'd1', tenant_id: 'site-2', state: 'draft', kit: emptyKit() }
+    const stranger = { id: '00000000-0000-4000-8000-0000000000d1', tenant_id: 'site-2', state: 'draft', kit: emptyKit() }
     await expect(supabaseBrandStore(answering({ data: stranger, error: null }), RULES).loadDraft()).rejects.toThrow(/another business/)
   })
 
@@ -315,12 +315,12 @@ describe('createDraft / loadDraft / loadLive', () => {
 
 describe('uploadLogo / uploadGuide', () => {
   it('puts the original in the private bucket and the PNGs in the public bucket, at content-hash paths, never overwriting', async () => {
-    const asset = await store.uploadLogo('d1', preparedLogo())
+    const asset = await store.uploadLogo('00000000-0000-4000-8000-0000000000d1', preparedLogo())
     const uploads = callsOf('upload')
     expect(uploads.map((u) => u.target)).toEqual([
-      `brand-originals/site-1/d1/original-${SHA('a')}.png`,
-      `brand-assets/site-1/d1/${SHA('b')}.png`,
-      `brand-assets/site-1/d1/${SHA('c')}.png`,
+      `brand-originals/site-1/00000000-0000-4000-8000-0000000000d1/original-${SHA('a')}.png`,
+      `brand-assets/site-1/00000000-0000-4000-8000-0000000000d1/${SHA('b')}.png`,
+      `brand-assets/site-1/00000000-0000-4000-8000-0000000000d1/${SHA('c')}.png`,
     ])
     expect(uploads.map((u) => u.options)).toEqual([
       { contentType: 'image/png', cacheControl: '31536000', upsert: false },
@@ -328,27 +328,27 @@ describe('uploadLogo / uploadGuide', () => {
       { contentType: 'image/png', cacheControl: '31536000', upsert: false },
     ])
     expect(asset).toEqual({
-      originalPath: `site-1/d1/original-${SHA('a')}.png`,
+      originalPath: `site-1/00000000-0000-4000-8000-0000000000d1/original-${SHA('a')}.png`,
       originalType: 'image/png',
       originalName: 'Acme.png',
       aspect: 4,
       tone: { luminance: 0.1, transparent: true },
       renditions: {
-        web: { url: `https://abcd.supabase.co/storage/v1/object/public/brand-assets/site-1/d1/${SHA('b')}.png`, width: 360, height: 96, bytes: 7, sha256: SHA('b') },
-        email: { url: `https://abcd.supabase.co/storage/v1/object/public/brand-assets/site-1/d1/${SHA('c')}.png`, width: 450, height: 120, bytes: 10, sha256: SHA('c') },
+        web: { url: `https://abcd.supabase.co/storage/v1/object/public/brand-assets/site-1/00000000-0000-4000-8000-0000000000d1/${SHA('b')}.png`, width: 360, height: 96, bytes: 7, sha256: SHA('b') },
+        email: { url: `https://abcd.supabase.co/storage/v1/object/public/brand-assets/site-1/00000000-0000-4000-8000-0000000000d1/${SHA('c')}.png`, width: 450, height: 120, bytes: 10, sha256: SHA('c') },
       },
     })
   })
 
   it('treats "already exists" as done (same path, same bytes), so a retry succeeds', async () => {
-    await store.uploadLogo('d1', preparedLogo())
-    await expect(store.uploadLogo('d1', preparedLogo())).resolves.toBeDefined()
+    await store.uploadLogo('00000000-0000-4000-8000-0000000000d1', preparedLogo())
+    await expect(store.uploadLogo('00000000-0000-4000-8000-0000000000d1', preparedLogo())).resolves.toBeDefined()
     expect(callsOf('upload')).toHaveLength(6)
   })
 
   it('throws any other upload error', async () => {
     db.uploadError = { message: 'new row violates row-level security policy', statusCode: '403' }
-    await expect(store.uploadLogo('d1', preparedLogo())).rejects.toBeInstanceOf(BrandStoreError)
+    await expect(store.uploadLogo('00000000-0000-4000-8000-0000000000d1', preparedLogo())).rejects.toBeInstanceOf(BrandStoreError)
   })
 
   it('refuses an unsafe draft id before touching storage', async () => {
@@ -357,11 +357,11 @@ describe('uploadLogo / uploadGuide', () => {
   })
 
   it('puts a guide in the private bucket as a PDF', async () => {
-    const ref = await store.uploadGuide('d1', preparedGuide)
+    const ref = await store.uploadGuide('00000000-0000-4000-8000-0000000000d1', preparedGuide)
     expect(callsOf('upload')).toEqual([
-      { kind: 'upload', target: `brand-originals/site-1/d1/guide-${SHA('d')}.pdf`, options: { contentType: 'application/pdf', cacheControl: '31536000', upsert: false } },
+      { kind: 'upload', target: `brand-originals/site-1/00000000-0000-4000-8000-0000000000d1/guide-${SHA('d')}.pdf`, options: { contentType: 'application/pdf', cacheControl: '31536000', upsert: false } },
     ])
-    expect(ref).toMatchObject({ path: `site-1/d1/guide-${SHA('d')}.pdf`, name: 'Guide.pdf', bytes: 8 })
+    expect(ref).toMatchObject({ path: `site-1/00000000-0000-4000-8000-0000000000d1/guide-${SHA('d')}.pdf`, name: 'Guide.pdf', bytes: 8 })
     expect(Number.isNaN(Date.parse(ref.uploadedAt))).toBe(false)
   })
 })
@@ -393,13 +393,13 @@ describe('saveDraft', () => {
   it('refuses a logo URL that is not in our own public bucket', async () => {
     const draft = await store.createDraft()
     const logo = await store.uploadLogo(draft.id, preparedLogo())
-    logo.renditions.web = { ...logo.renditions.web!, url: `https://evil.example/brand-assets/site-1/d1/${SHA('b')}.png` }
+    logo.renditions.web = { ...logo.renditions.web!, url: `https://evil.example/brand-assets/site-1/00000000-0000-4000-8000-0000000000d1/${SHA('b')}.png` }
     await expect(store.saveDraft(draft.id, { ...emptyKit(), logos: { logo } })).rejects.toBeInstanceOf(KitError)
   })
 
   it('says so when the draft is gone or already published', async () => {
-    db.seed({ id: 'p1', state: 'published' })
-    await expect(store.saveDraft('p1', emptyKit())).rejects.toThrow(/no longer exists or has already been published/)
+    db.seed({ id: '00000000-0000-4000-8000-0000000000a1', state: 'published' })
+    await expect(store.saveDraft('00000000-0000-4000-8000-0000000000a1', emptyKit())).rejects.toThrow(/no longer exists or has already been published/)
   })
 })
 
@@ -426,48 +426,48 @@ describe('publish / rollback / listPublished', () => {
   })
 
   it('refuses to publish a version that is not a draft, without calling the rpc', async () => {
-    db.seed({ id: 'p1', state: 'published' })
-    await expect(store.publish('p1')).rejects.toBeInstanceOf(KitError)
+    db.seed({ id: '00000000-0000-4000-8000-0000000000a1', state: 'published' })
+    await expect(store.publish('00000000-0000-4000-8000-0000000000a1')).rejects.toBeInstanceOf(KitError)
     expect(callsOf('rpc')).toEqual([])
   })
 
   it('refuses to publish a stored draft a tampered browser saved, without calling the rpc', async () => {
-    db.seed({ id: 'd1', state: 'draft', kit: { ...emptyKit(), colors: { primary: 'url(javascript:1)' } } })
-    await expect(store.publish('d1')).rejects.toBeInstanceOf(KitError)
+    db.seed({ id: '00000000-0000-4000-8000-0000000000d1', state: 'draft', kit: { ...emptyKit(), colors: { primary: 'url(javascript:1)' } } })
+    await expect(store.publish('00000000-0000-4000-8000-0000000000d1')).rejects.toBeInstanceOf(KitError)
     expect(callsOf('rpc')).toEqual([])
   })
 
   it('throws when the draft does not exist', async () => {
-    await expect(store.publish('nope')).rejects.toThrow(/no longer exists/)
+    await expect(store.publish('00000000-0000-4000-8000-00000000dead')).rejects.toThrow(/no longer exists/)
   })
 
   it('rolls back through the rpc', async () => {
-    db.seed({ id: 'p1', state: 'published' })
-    db.seed({ id: 'p2', state: 'published' })
-    db.tables.brand_kit_live?.push({ tenant_id: 'site-1', version_id: 'p2' })
-    await store.rollback('p1')
-    expect(callsOf('rpc')).toEqual([{ kind: 'rpc', target: 'brand_kit_rollback', values: { version_id: 'p1' } }])
-    expect((await store.loadLive())?.id).toBe('p1')
+    db.seed({ id: '00000000-0000-4000-8000-0000000000a1', state: 'published' })
+    db.seed({ id: '00000000-0000-4000-8000-0000000000a2', state: 'published' })
+    db.tables.brand_kit_live?.push({ tenant_id: 'site-1', version_id: '00000000-0000-4000-8000-0000000000a2' })
+    await store.rollback('00000000-0000-4000-8000-0000000000a1')
+    expect(callsOf('rpc')).toEqual([{ kind: 'rpc', target: 'brand_kit_rollback', values: { version_id: '00000000-0000-4000-8000-0000000000a1' } }])
+    expect((await store.loadLive())?.id).toBe('00000000-0000-4000-8000-0000000000a1')
   })
 
   it('surfaces an rpc error', async () => {
     db.rpcError = { message: 'not allowed to edit this tenant', code: '42501' }
-    await expect(store.rollback('p1')).rejects.toBeInstanceOf(BrandStoreError)
+    await expect(store.rollback('00000000-0000-4000-8000-0000000000a1')).rejects.toBeInstanceOf(BrandStoreError)
   })
 
   it('lists published versions newest first', async () => {
-    db.seed({ id: 'p1', state: 'published', published_at: '2026-01-01T00:00:00.000Z' })
-    db.seed({ id: 'd1', state: 'draft' })
-    db.seed({ id: 'p2', state: 'published', published_at: '2026-06-01T00:00:00.000Z' })
-    expect((await store.listPublished()).map((v) => v.id)).toEqual(['p2', 'p1'])
+    db.seed({ id: '00000000-0000-4000-8000-0000000000a1', state: 'published', published_at: '2026-01-01T00:00:00.000Z' })
+    db.seed({ id: '00000000-0000-4000-8000-0000000000d1', state: 'draft' })
+    db.seed({ id: '00000000-0000-4000-8000-0000000000a2', state: 'published', published_at: '2026-06-01T00:00:00.000Z' })
+    expect((await store.listPublished()).map((v) => v.id)).toEqual(['00000000-0000-4000-8000-0000000000a2', '00000000-0000-4000-8000-0000000000a1'])
     expect(callsOf('select').at(-1)?.order).toEqual(['published_at', false])
   })
 })
 
 describe('discardDraft', () => {
   it('removes the draft\'s own files from both buckets, then the row, leaving other versions\' files alone', async () => {
-    db.seed({ id: 'p1', state: 'published' })
-    await store.uploadLogo('p1', preparedLogo())
+    db.seed({ id: '00000000-0000-4000-8000-0000000000a1', state: 'published' })
+    await store.uploadLogo('00000000-0000-4000-8000-0000000000a1', preparedLogo())
     const draft = await store.createDraft()
     await store.uploadLogo(draft.id, preparedLogo())
     await store.uploadGuide(draft.id, preparedGuide)
@@ -476,20 +476,20 @@ describe('discardDraft', () => {
 
     const order = db.calls.slice(-6).map((c) => c.kind)
     expect(order).toEqual(['select', 'list', 'remove', 'list', 'remove', 'delete'])
-    expect([...(db.files['brand-assets']?.keys() ?? [])].every((p) => p.startsWith('site-1/p1/'))).toBe(true)
-    expect([...(db.files['brand-originals']?.keys() ?? [])].every((p) => p.startsWith('site-1/p1/'))).toBe(true)
+    expect([...(db.files['brand-assets']?.keys() ?? [])].every((p) => p.startsWith('site-1/00000000-0000-4000-8000-0000000000a1/'))).toBe(true)
+    expect([...(db.files['brand-originals']?.keys() ?? [])].every((p) => p.startsWith('site-1/00000000-0000-4000-8000-0000000000a1/'))).toBe(true)
     expect(db.files['brand-assets']?.size).toBe(2)
     expect(await store.loadDraft()).toBeNull()
   })
 
   it('refuses to discard a published version', async () => {
-    db.seed({ id: 'p1', state: 'published' })
-    await expect(store.discardDraft('p1')).rejects.toThrow(/cannot be discarded/)
+    db.seed({ id: '00000000-0000-4000-8000-0000000000a1', state: 'published' })
+    await expect(store.discardDraft('00000000-0000-4000-8000-0000000000a1')).rejects.toThrow(/cannot be discarded/)
     expect(callsOf('delete')).toEqual([])
   })
 
   it('does nothing for a draft that is already gone', async () => {
-    await store.discardDraft('gone')
+    await store.discardDraft('00000000-0000-4000-8000-00000000900e')
     expect(callsOf('delete')).toEqual([])
   })
 
@@ -515,6 +515,6 @@ describe('setup', () => {
   })
 
   it('builds public URLs from the rules', () => {
-    expect(store.publicUrl(`site-1/d1/${SHA('e')}.png`)).toBe(`https://abcd.supabase.co/storage/v1/object/public/brand-assets/site-1/d1/${SHA('e')}.png`)
+    expect(store.publicUrl(`site-1/00000000-0000-4000-8000-0000000000d1/${SHA('e')}.png`)).toBe(`https://abcd.supabase.co/storage/v1/object/public/brand-assets/site-1/00000000-0000-4000-8000-0000000000d1/${SHA('e')}.png`)
   })
 })

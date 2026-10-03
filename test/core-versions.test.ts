@@ -5,7 +5,7 @@ import { fullKit, rules } from './core-fixtures.js'
 
 function version(over: Partial<BrandKitVersion> = {}): BrandKitVersion {
   return {
-    id: 'v-0001',
+    id: '0b5c1f8e-7d1a-4c55-9f1e-3a1b2c3d4e5f',
     tenantId: 'tenant-1',
     state: 'draft',
     kit: fullKit(),

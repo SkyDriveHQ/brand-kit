@@ -8,7 +8,7 @@
  */
 import type { BrandGuideRef, BrandKit, BrandKitVersion, BrandStorageRules, LogoAsset, Rendition, RenditionName, VersionState } from '../core/kit.js'
 import { PALETTE_KEEP } from '../core/kit.js'
-import { guidePath, isSafeSegment, originalPath, publicAssetPath, publicAssetUrl, rulesAreValid } from '../core/paths.js'
+import { guidePath, isSafeSegment, isVersionId, originalPath, publicAssetPath, publicAssetUrl, rulesAreValid } from '../core/paths.js'
 import { KitError, parseKit } from '../core/validate.js'
 import { draftFrom, publishProblems } from '../core/versions.js'
 import type { PreparedGuide, PreparedLogo } from '../browser/types.js'
@@ -59,7 +59,8 @@ function check<T>(action: string, result: ResultLike<T>): T | null {
 }
 
 function assertId(name: string, id: string): void {
-  if (!isSafeSegment(id)) throw new Error(`Invalid ${name}: ${JSON.stringify(id)}`)
+  // Version ids are uuids (brand_kit_versions generates them), the shape the storage policies accept.
+  if (!isVersionId(id)) throw new Error(`Invalid ${name}: ${JSON.stringify(id)}`)
 }
 
 /**
