@@ -57,6 +57,16 @@ central brand service at run time (suite Rule 13). Each product:
    - `themeCssText` re-checks every value as strict hex or a curated font stack, and refuses odd selectors.
    - The email HTML escapes every text and checks every address again.
 
+## Install
+
+```sh
+npm install github:SkyDriveHQ/brand-kit#v0.1.1
+```
+
+The repo is public and installed by tag, like `suite-contracts`. The package builds itself on install, and no
+GitHub token is needed; that was verified with no credentials on 2026-10-03, which is how a Netlify build
+installs it.
+
 ## Using it in a product
 
 ```ts
