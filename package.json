@@ -4,17 +4,37 @@
   "description": "The customer brand-kit drop-in engine shared by SkyDrive products. A customer drops in their own brand kit (logos, colours, a heading font, their brand guide); the product stores it in its own database and applies it to the screens, emails and documents its customers see.",
   "type": "module",
   "license": "UNLICENSED",
-  "repository": { "type": "git", "url": "git+https://github.com/SkyDriveHQ/brand-kit.git" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SkyDriveHQ/brand-kit.git"
+  },
   "sideEffects": false,
   "exports": {
-    ".": { "types": "./dist/core/index.d.ts", "default": "./dist/core/index.js" },
-    "./browser": { "types": "./dist/browser/index.d.ts", "default": "./dist/browser/index.js" },
-    "./react": { "types": "./dist/react/index.d.ts", "default": "./dist/react/index.js" },
-    "./supabase": { "types": "./dist/supabase/index.d.ts", "default": "./dist/supabase/index.js" },
+    ".": {
+      "types": "./dist/core/index.d.ts",
+      "default": "./dist/core/index.js"
+    },
+    "./browser": {
+      "types": "./dist/browser/index.d.ts",
+      "default": "./dist/browser/index.js"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "default": "./dist/react/index.js"
+    },
+    "./supabase": {
+      "types": "./dist/supabase/index.d.ts",
+      "default": "./dist/supabase/index.js"
+    },
     "./react/styles.css": "./dist/react/styles.css",
     "./sql/brand_kit.sql": "./sql/brand_kit.sql"
   },
-  "files": ["dist", "src", "sql", "README.md"],
+  "files": [
+    "dist",
+    "src",
+    "sql",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json && node scripts/copy-assets.mjs",
     "prepare": "npm run build",
@@ -28,7 +48,9 @@
     "react": "^18.2.0 || ^19.0.0"
   },
   "peerDependenciesMeta": {
-    "react": { "optional": true }
+    "react": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.0",
@@ -37,7 +59,9 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "typescript": "^5.9.0",
-    "vitest": "^3.2.0"
+    "vitest": "^4.1.11"
   },
-  "engines": { "node": ">=20.19" }
+  "engines": {
+    "node": ">=20.19"
+  }
 }
