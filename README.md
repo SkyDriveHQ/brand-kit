@@ -1,7 +1,7 @@
 # @skydrivehq/brand-kit
 
 **The engine behind "drop in your brand kit".** A dropzone, rigging shop or video business arrives with its
-own brand: logos, colours, maybe a font and a brand-guide PDF. It drops them into a SkyDrive product, which
+own brand: logos, colours, maybe a font and a brand-guide PDF. It drops them into a Stratica product, which
 **stores** them in its own database and **applies** them to the screens, emails, PDFs and posters its
 customers see.
 
@@ -76,7 +76,7 @@ import { BrandKitDropIn } from '@skydrivehq/brand-kit/react'
 import '@skydrivehq/brand-kit/react/styles.css'
 
 const rules = { storageOrigin: 'https://<ref>.supabase.co', publicBucket: 'brand-assets', privateBucket: 'brand-originals', tenantId: site.id }
-const identity = { product: 'skyweather', productName: 'SkyWeather', poweredByLabel: 'Powered by SkyDrive', fallbackAccent: '#2563eb' }
+const identity = { product: 'skyweather', productName: 'SkyWeather', poweredByLabel: 'Powered by Stratica', fallbackAccent: '#2563eb' }
 
 // Settings page:
 <BrandKitDropIn store={supabaseBrandStore(supabase, rules)} identity={identity} rules={rules} fallbackName={site.name} />
