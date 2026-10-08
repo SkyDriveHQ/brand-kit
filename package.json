@@ -1,7 +1,7 @@
 {
   "name": "@skydrivehq/brand-kit",
   "version": "0.1.1",
-  "description": "The customer brand-kit drop-in engine shared by SkyDrive products. A customer drops in their own brand kit (logos, colours, a heading font, their brand guide); the product stores it in its own database and applies it to the screens, emails and documents its customers see.",
+  "description": "The customer brand-kit drop-in engine shared by Stratica products. A customer drops in their own brand kit (logos, colours, a heading font, their brand guide); the product stores it in its own database and applies it to the screens, emails and documents its customers see.",
   "type": "module",
   "license": "UNLICENSED",
   "repository": {
