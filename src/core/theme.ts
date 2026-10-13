@@ -147,7 +147,7 @@ export function deriveTheme(kit: BrandKit, identity: ProductIdentity, options: A
     logo,
     colors: derived.colors,
     headingFont: font ? font.stack : null,
-    headingFontCss: font ? font.cssUrl : null,
+    headingFontCss: font && options.selfHostedFonts !== true ? font.cssUrl : null,
     poweredBy: showPoweredBy ? { label: identity.poweredByLabel, href: identity.poweredByHref ?? null } : null,
     problems,
   }

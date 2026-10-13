@@ -42,6 +42,9 @@ export function isSha256Hex(s: unknown): s is string {
 
 /** True when the rules are well formed. Malformed rules make every check fail closed. */
 export function rulesAreValid(rules: BrandStorageRules): boolean {
+  if (typeof rules === 'object' && rules !== null && rules.fileStore !== undefined) {
+    return typeof rules.fileStore === 'object' && rules.fileStore !== null && typeof rules.fileStore.root === 'string' && rules.fileStore.root !== ''
+  }
   return (
     typeof rules === 'object' &&
     rules !== null &&
@@ -126,6 +129,7 @@ function isOwnPublicAssetPath(path: string, rules: BrandStorageRules): boolean {
  */
 export function isOwnPublicAssetUrl(url: unknown, rules: BrandStorageRules): boolean {
   if (typeof url !== 'string' || !rulesAreValid(rules)) return false
+  if (rules.fileStore !== undefined) return isFileStorePath(url) && /(?:^|\/)[0-9a-f]{64}\.png$/.test(url)
   if (url.length > 2048) return false
   // Nothing outside the exact shape is ever needed, so refuse the characters URL tricks are made of.
   if (/[\s\\?#%@]/.test(url) || /[^\x21-\x7e]/.test(url)) return false
@@ -137,6 +141,11 @@ export function isOwnPublicAssetUrl(url: unknown, rules: BrandStorageRules): boo
 /** True when a private-bucket path (an original or a guide) belongs to this tenant and is well formed. */
 export function isOwnPrivatePath(path: unknown, rules: BrandStorageRules): boolean {
   if (typeof path !== 'string' || !rulesAreValid(rules)) return false
+  if (rules.fileStore !== undefined) {
+    const dot = path.lastIndexOf('.')
+    const ext = dot < 0 ? '' : path.slice(dot + 1).toLowerCase()
+    return isFileStorePath(path) && (ext === 'pdf' || (ORIGINAL_EXTENSIONS as readonly string[]).includes(ext))
+  }
   const prefix = `${rules.tenantId}/`
   if (!path.startsWith(prefix)) return false
   const parts = path.slice(prefix.length).split('/')
@@ -144,4 +153,33 @@ export function isOwnPrivatePath(path: unknown, rules: BrandStorageRules): boole
   // The first folder under the tenant is the version, as in the public bucket and the SQL policies.
   if (!isVersionId(parts[0])) return false
   return parts.every((p) => /^[A-Za-z0-9_-][A-Za-z0-9._-]{0,199}$/.test(p) && !p.includes('..'))
+}
+
+/**
+ * Opt-in rules for a site that keeps its brand files in a folder (see `@skydrivehq/brand-kit/node`).
+ * Paths in the kit are then relative to `root`; `isFileStorePath` is the lexical check and the Node entry
+ * also resolves each path on disk and refuses anything that lands outside `root`. The default Supabase rules
+ * are untouched: only a rules object made here accepts relative paths.
+ */
+export function fileStoreRules(opts: { root: string }): BrandStorageRules {
+  if (typeof opts?.root !== 'string' || opts.root === '') throw new Error('fileStoreRules: root must be a folder path')
+  return {
+    storageOrigin: 'https://file-store.invalid',
+    publicBucket: 'files',
+    privateBucket: 'files',
+    tenantId: 'local',
+    fileStore: { root: opts.root },
+  }
+}
+
+const FILE_SEGMENT = /^[A-Za-z0-9_][A-Za-z0-9._-]{0,199}$/
+
+/**
+ * True for a plain relative path of letters, digits, `_`, `-` and `.` in `/`-separated segments. Refuses
+ * absolute paths, drive letters, backslashes, URLs and schemes, `..` and `.` segments, empty segments, hidden
+ * (dot-leading) names and anything over 512 characters.
+ */
+export function isFileStorePath(p: unknown): p is string {
+  if (typeof p !== 'string' || p.length === 0 || p.length > 512) return false
+  return p.split('/').every((seg) => FILE_SEGMENT.test(seg) && !seg.includes('..'))
 }
