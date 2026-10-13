@@ -1,6 +1,6 @@
 {
   "name": "@skydrivehq/brand-kit",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "The customer brand-kit drop-in engine shared by Stratica products. A customer drops in their own brand kit (logos, colours, a heading font, their brand guide); the product stores it in its own database and applies it to the screens, emails and documents its customers see.",
   "type": "module",
   "license": "UNLICENSED",
@@ -26,6 +26,10 @@
       "types": "./dist/supabase/index.d.ts",
       "default": "./dist/supabase/index.js"
     },
+    "./node": {
+      "types": "./dist/node/index.d.ts",
+      "default": "./dist/node/index.js"
+    },
     "./react/styles.css": "./dist/react/styles.css",
     "./sql/brand_kit.sql": "./sql/brand_kit.sql"
   },
@@ -45,23 +49,32 @@
     "dompurify": "^3.2.6"
   },
   "peerDependencies": {
-    "react": "^18.2.0 || ^19.0.0"
+    "react": "^18.2.0 || ^19.0.0",
+    "sharp": ">=0.33.0"
   },
   "peerDependenciesMeta": {
     "react": {
+      "optional": true
+    },
+    "sharp": {
       "optional": true
     }
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.0",
+    "@types/node": "^20.19.43",
     "@types/react": "^19.1.0",
     "jsdom": "^26.1.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "sharp": "^0.35.5",
     "typescript": "^5.9.0",
     "vitest": "^4.1.11"
   },
   "engines": {
     "node": ">=20.19"
+  },
+  "bin": {
+    "brand-kit-css": "./dist/node/cli.js"
   }
 }

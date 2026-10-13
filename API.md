@@ -1,4 +1,4 @@
-# brand-kit v0.1 — the agreed internal API (build contract)
+# brand-kit v0.2 — the agreed internal API (build contract)
 
 Types live in `src/core/kit.ts`: read it first. It is the contract and is not to be changed without saying so in your report.
 Every module is ESM TypeScript with NodeNext resolution, so imports end in `.js`.
@@ -100,6 +100,19 @@ Every module is ESM TypeScript with NodeNext resolution, so imports end in `.js`
   - `prepareGuide(file: File): Promise<PreparedGuide>` requires PDF magic bytes and `guideMaxBytes`.
 - **`rasterise.ts`** and **`hash.ts`** (`sha256Hex(blob | Uint8Array)` via `crypto.subtle`) are internal helpers.
 - **`index.ts`** re-exports.
+
+## Node (`src/node/`, `@skydrivehq/brand-kit/node`, v0.2)
+
+- `loadKitFromDir(dir: string, opts?: { mode?: 'strict' | 'lenient'; prepare?: boolean; outDir?: string; publicBase?: string }): Promise<ParseResult>`
+  - reads `<dir>/kit.json`; a logo given as a path string is prepared with `prepareLogoFile` into `outDir` (default `brand-kit-out`, relative to `dir`);
+  - validates with `fileStoreRules({ root })`, then requires every referenced file to resolve inside `dir` after symlinks;
+  - `strict` (default) throws `KitError` on any refusal; `prepare: false` skips path-string logos and does not need `sharp`; `publicBase` (https, ends in `/`) makes rendition urls absolute.
+- `prepareLogoFile(path: string, slot: LogoSlot, outDir: string): Promise<PreparedLogo>`
+  - same checks, messages, renditions and result as `prepareLogo`; writes each PNG to `outDir/<sha256>.png`;
+  - extension must agree with the sniffed type; an SVG with anything `svgDenyScan` flags is refused, not repaired.
+- `fileStoreRules(opts: { root: string }): BrandStorageRules` and `isFileStorePath(p: unknown): p is string` (also in core): relative `/`-separated paths of letters, digits, `_`, `-`, `.`; no `..`, hidden, absolute, drive, backslash or URL forms. Only rules made by `fileStoreRules` accept them.
+- `ApplyOptions.selfHostedFonts?: boolean`: `deriveTheme` returns `headingFontCss: null`.
+- Bin `brand-kit-css <kitDir> [--surface s] [--selector sel] [--self-hosted-fonts] [--fallback-accent #rrggbb] [--fallback-name n]` prints `themeCssText`; problems go to stderr.
 
 ## Supabase (`src/supabase/`, B)
 

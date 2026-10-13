@@ -60,7 +60,7 @@ central brand service at run time (suite Rule 13). Each product:
 ## Install
 
 ```sh
-npm install github:SkyDriveHQ/brand-kit#v0.1.1
+npm install github:SkyDriveHQ/brand-kit#v0.2.0
 ```
 
 The repo is public and installed by tag, like `suite-contracts`. The package builds itself on install, and no
@@ -92,13 +92,30 @@ untouched.
 **"Powered by".** It is one string in `ProductIdentity`, because the suite's public name is still undecided.
 Whether a plan may hide it is the product's call, through `showPoweredBy`.
 
-## Known gaps (v0.1)
+## Static sites: no Supabase, no browser
+
+```ts
+import { loadKitFromDir, prepareLogoFile, fileStoreRules } from '@skydrivehq/brand-kit/node'
+const { kit } = await loadKitFromDir('./brand', { publicBase: 'https://example.com/brand/' })
+```
+
+- `loadKitFromDir(dir, opts)` reads `kit.json`. A logo may be a relative path (`"logos": { "logo": "logo.svg" }`),
+  which is prepared into PNG renditions in `<dir>/brand-kit-out/`, or a full logo record with relative paths.
+  Paths are checked with `fileStoreRules`, then resolved on disk: `..`, absolute paths, URLs and symlinks that
+  leave the folder are refused. The default Supabase rules are unchanged.
+- `prepareLogoFile(path, slot, outDir)` is `prepareLogo` for Node: same checks, sizes and result, using `sharp`
+  (optional peer: `npm install sharp`). An SVG is rasterised and never served.
+- Self-hosted heading font: pass `selfHostedFonts: true` to `deriveTheme`. `--brand-font-heading` is still set and
+  no Google Fonts address is returned. Questrial is in the curated list.
+- `brand-kit-css <kitDir> --surface web-light [--selector :root] [--self-hosted-fonts] > kit.css` prints the theme CSS.
+
+## Known gaps (v0.2)
 
 - **The SQL template has never been applied anywhere.** Apply it to a branch first and run the checks in its
   header.
 - **No server-side check of uploaded PNGs or of publishing yet.** For that, publish through an edge function
   that runs `publishProblems(version, rules)` and `checkPng`; core runs in Deno.
-- **Heading fonts load from Google's servers.** Ops chose self-hosting, which is still to build.
+- **Heading fonts load from Google's servers by default.** `selfHostedFonts: true` turns that off; the site supplies the `@font-face`.
 - **The canvas pipeline is unit-tested with a fake canvas.** It was checked in real Chrome on 2026-10-02 with
   `smoke/index.html`: a PNG trimmed to 6:1 with its two brand colours extracted and all 5 sizes made; an SVG
   with `<script>` and `onload` cleaned and all 7 icon sizes made; a hostile SVG refused. Firefox and Safari

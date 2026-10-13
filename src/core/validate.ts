@@ -193,7 +193,7 @@ function parseRendition(ctx: Ctx, value: unknown, field: string, slotLabel: stri
     )
     return null
   }
-  if (!isSha256Hex(sha256) || !(url as string).endsWith(`/${sha256}.png`)) {
+  if (!isSha256Hex(sha256) || !((url as string) === `${sha256}.png` || (url as string).endsWith(`/${sha256}.png`))) {
     refuse(ctx, `${field}.sha256`, `${slotLabel} has an image whose fingerprint does not match its file, so it was not used.`)
     return null
   }

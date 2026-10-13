@@ -177,6 +177,11 @@ export interface BrandStorageRules {
   privateBucket: string
   /** The tenant (site, dropzone, shop) the kit belongs to. Every path starts with it. */
   tenantId: string
+  /**
+   * Set only by `fileStoreRules` (see `paths.ts`). When present, logo, rendition and guide addresses are
+   * relative file paths inside a folder instead of Supabase addresses. Never set it from customer data.
+   */
+  fileStore?: { root: string }
 }
 
 export const DEFAULT_BUCKETS = { publicBucket: 'brand-assets', privateBucket: 'brand-originals' } as const
@@ -245,6 +250,12 @@ export interface ApplyOptions {
   fallbackName: string
   /** Whether to show `ProductIdentity.poweredByLabel`. Default true. */
   showPoweredBy?: boolean
+  /**
+   * The heading font is served by the site itself (its own `@font-face`). The theme then carries no
+   * stylesheet address (`headingFontCss` is null) and `--brand-font-heading` is still emitted. Default
+   * false: the font loads from Google Fonts.
+   */
+  selfHostedFonts?: boolean
 }
 
 /** The logo a surface should draw, already chosen and sized, or null to draw the name as text. */
