@@ -60,7 +60,7 @@ central brand service at run time (suite Rule 13). Each product:
 ## Install
 
 ```sh
-npm install github:SkyDriveHQ/brand-kit#v0.2.0
+npm install github:SkyDriveHQ/brand-kit#v0.2.1
 ```
 
 The repo is public and installed by tag, like `suite-contracts`. The package builds itself on install, and no
@@ -106,7 +106,7 @@ const { kit } = await loadKitFromDir('./brand', { publicBase: 'https://example.c
 - `prepareLogoFile(path, slot, outDir)` is `prepareLogo` for Node: same checks, sizes and result, using `sharp`
   (optional peer: `npm install sharp`). An SVG is rasterised and never served.
 - Self-hosted heading font: pass `selfHostedFonts: true` to `deriveTheme`. `--brand-font-heading` is still set and
-  no Google Fonts address is returned. Questrial is in the curated list.
+  no Google Fonts address is returned. Questrial, Aldrich and Roboto Condensed are in the curated list.
 - `brand-kit-css <kitDir> --surface web-light [--selector :root] [--self-hosted-fonts] > kit.css` prints the theme CSS.
 
 ## Known gaps (v0.2)
