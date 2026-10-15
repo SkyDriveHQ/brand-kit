@@ -35,7 +35,6 @@ function poisoned(): BrandTheme {
       secondaryInk: 'url(javascript:alert(1))',
     },
     headingFont: "x;}</style><script>alert(1)</script>",
-    headingFontCss: 'https://evil.example/x.css',
     logo: { slot: 'logo', rendition: 'email', url: 'javascript:alert(1)', width: 100, height: 50, chip: false },
     poweredBy: { label: '<b>Powered</b>', href: 'javascript:alert(1)' },
   }

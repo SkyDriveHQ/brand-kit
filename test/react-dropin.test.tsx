@@ -27,7 +27,6 @@ async function mount(store = fakeStore(), extra: Partial<BrandKitDropInProps> = 
       identity={IDENTITY}
       rules={RULES}
       fallbackName="Skydive Testharness"
-      loadFonts={false}
       debounceMs={20}
       {...extra}
     />,
@@ -208,16 +207,22 @@ describe('BrandKitDropIn', () => {
     expect(select.value).toBe(first.id)
   })
 
-  it('loads only the chosen curated font stylesheet, and only when asked to', async () => {
+  it('declares only the chosen curated font from the package files, and only when given a font folder', async () => {
     const first = CURATED_FONTS[0]
     if (!first) throw new Error('no curated fonts')
-    await mount(fakeStore({ draft: { ...emptyKit(), fonts: { heading: first.id } } }), { loadFonts: true })
-    await waitFor(() => expect(document.querySelectorAll('link[rel="stylesheet"]')).toHaveLength(1))
-    expect(document.querySelector('link[rel="stylesheet"]')?.getAttribute('href')).toBe(first.cssUrl)
-    cleanup()
-    document.head.querySelectorAll('link').forEach((l) => l.remove())
-    await mount(fakeStore({ draft: { ...emptyKit(), fonts: { heading: first.id } } }))
+    await mount(fakeStore({ draft: { ...emptyKit(), fonts: { heading: first.id } } }), { fontBase: '/fonts/' })
+    await waitFor(() => expect(document.querySelectorAll('style[data-bk-font]')).toHaveLength(1))
+    const css = document.querySelector('style[data-bk-font]')?.textContent ?? ''
+    expect(css).toContain(`url(/fonts/${first.files[0]?.path})`)
+    expect(css).not.toMatch(/https?:/)
     expect(document.querySelectorAll('link[rel="stylesheet"]')).toHaveLength(0)
+    cleanup()
+    document.head.querySelectorAll('style[data-bk-font]').forEach((l) => l.remove())
+    await mount(fakeStore({ draft: { ...emptyKit(), fonts: { heading: first.id } } }))
+    expect(document.querySelectorAll('style[data-bk-font]')).toHaveLength(0)
+    cleanup()
+    await mount(fakeStore({ draft: { ...emptyKit(), fonts: { heading: first.id } } }), { fontBase: 'https://evil.example/' })
+    expect(document.querySelectorAll('style[data-bk-font]')).toHaveLength(0)
   })
 
   it('publishes, shows when it went live, and calls onPublished', async () => {

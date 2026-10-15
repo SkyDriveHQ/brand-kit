@@ -50,8 +50,8 @@ Every module is ESM TypeScript with NodeNext resolution, so imports end in `.js`
   - `guidePath(rules, versionId, sha256)` gives `${tenantId}/${versionId}/guide-${sha256}.pdf`.
   - `isOwnPublicAssetUrl(url, rules): boolean` requires https, the exact origin, the public bucket and the tenant prefix, with a file name of 64 hex characters plus `.png`, no `..`, and no query or credentials.
 - **`fonts.ts`**
-  - `CURATED_FONTS: readonly { id; family; fallback; category: 'sans' | 'serif' | 'display' | 'mono'; cssUrl }[]` holds 15 SIL Open Font Licence Google Fonts.
-  - `cssUrl` is the `https://fonts.googleapis.com/css2?family=...&display=swap` address.
+  - `CURATED_FONTS: readonly { id; family; fallback; category: 'sans' | 'serif' | 'display' | 'mono'; license; files }[]` holds 15 SIL Open Font Licence families, each with `license` and `files` (woff2 files under the package's `fonts/` folder).
+  - `fontFaceCss(font, base = './')` writes the `@font-face` rules for one font, one per file with its unicode range, addressed `base + path`. `base` must be a relative folder address ending in `/` (`isSafeFontBase`); anything else throws. `allFontFacesCss(base)` does every font and is what `fonts/fonts.css` holds.
   - `fontById(id)` looks one up.
 - **`theme.ts`**
   - `chooseLogo(kit, surface): LogoChoice | null`. Dark surfaces (`web-dark`, `tv`) prefer `logoOnDark`. Otherwise `logo` is used with `chip = tone.transparent && tone.luminance < 0.4`. The other surfaces use `logo`, then `mark`.
@@ -111,8 +111,9 @@ Every module is ESM TypeScript with NodeNext resolution, so imports end in `.js`
   - same checks, messages, renditions and result as `prepareLogo`; writes each PNG to `outDir/<sha256>.png`;
   - extension must agree with the sniffed type; an SVG with anything `svgDenyScan` flags is refused, not repaired.
 - `fileStoreRules(opts: { root: string }): BrandStorageRules` and `isFileStorePath(p: unknown): p is string` (also in core): relative `/`-separated paths of letters, digits, `_`, `-`, `.`; no `..`, hidden, absolute, drive, backslash or URL forms. Only rules made by `fileStoreRules` accept them.
-- `ApplyOptions.selfHostedFonts?: boolean`: `deriveTheme` returns `headingFontCss: null`.
-- Bin `brand-kit-css <kitDir> [--surface s] [--selector sel] [--self-hosted-fonts] [--fallback-accent #rrggbb] [--fallback-name n]` prints `themeCssText`; problems go to stderr.
+- `ApplyOptions.selfHostedFonts?: boolean` is deprecated and does nothing: fonts are always self-hosted. `BrandTheme.headingFontCss` and `isCuratedCssUrl` are gone (v0.3.0).
+- `themeCssText(theme, selector, { fontBase })` puts the heading font's `@font-face` rules before the rule. `copyFontFiles(font, destDir)` (node entry) copies a font's files and `OFL.txt` to `<destDir>/<id>/`.
+- Bin `brand-kit-css <kitDir> [--surface s] [--selector sel] [--font-base ./fonts/] [--copy-fonts dir] [--fallback-accent #rrggbb] [--fallback-name n]` prints `themeCssText`; problems go to stderr.
 
 ## Supabase (`src/supabase/`, B)
 

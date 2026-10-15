@@ -7,7 +7,7 @@
  * altered after `deriveTheme`, still cannot break out of a stylesheet or an email.
  */
 import { isStrictHex } from './color.js'
-import { isCuratedStack } from './fonts.js'
+import { CURATED_FONTS, fontFaceCss, isCuratedStack } from './fonts.js'
 import type { BrandTheme } from './kit.js'
 import { isValidWebsite } from './validate.js'
 
@@ -66,20 +66,32 @@ export function isSafeSelector(selector: unknown): selector is string {
   return selector.split(' ').every((part) => part.length > 0 && COMPOUND.test(part))
 }
 
+export interface ThemeCssOptions {
+  /**
+   * A relative folder address ending in `/` that the package's `fonts/` folder is served from. When set
+   * and the theme has a curated heading font, the `@font-face` rules for that one font come first.
+   */
+  fontBase?: string
+}
+
 /**
  * A complete CSS rule setting the theme's variables, e.g. `:root{--brand-accent:#1a73e8;...}`, safe to put
- * inside a `<style>` element. Throws if `selector` is not a simple selector (that is a programming
- * error: selectors come from product code, never from a customer).
+ * inside a `<style>` element. With `options.fontBase`, the heading font's `@font-face` rules (self-hosted
+ * woff2 files, relative addresses) come first. Throws if `selector` or `fontBase` is not a safe value
+ * (that is a programming error: both come from product code, never from a customer).
  */
-export function themeCssText(theme: BrandTheme, selector = ':root'): string {
+export function themeCssText(theme: BrandTheme, selector = ':root', options: ThemeCssOptions = {}): string {
   if (!isSafeSelector(selector)) {
     throw new Error('themeCssText: selector must be simple parts such as :root, .class, #id or [data-x="y"]')
   }
+  const curated = theme.headingFont === null ? undefined : CURATED_FONTS.find((f) => f.stack === theme.headingFont)
+  const faces = options.fontBase !== undefined && curated !== undefined ? `${fontFaceCss(curated, options.fontBase)}
+` : ''
   const vars = themeCssVars(theme)
   const body = THEME_CSS_VARS.filter((k) => k in vars)
     .map((k) => `${k}:${vars[k]};`)
     .join('')
-  return `${selector}{${body}}`
+  return `${faces}${selector}{${body}}`
 }
 
 /** The structural slice of a DOM element this needs, so core never depends on the DOM. */

@@ -1,5 +1,9 @@
+import { existsSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { CURATED_FONTS, fontById, isCuratedCssUrl, isCuratedStack } from '../src/core/fonts.js'
+import { CURATED_FONTS, allFontFacesCss, fontById, fontFaceCss, isCuratedStack, isSafeFontBase } from '../src/core/fonts.js'
+
+const FONTS_DIR = join(__dirname, '..', 'fonts')
 
 describe('CURATED_FONTS', () => {
   it('holds about a dozen fonts across sans, serif and display, with unique ids', () => {
@@ -10,21 +14,53 @@ describe('CURATED_FONTS', () => {
     for (const c of ['sans', 'serif', 'display']) expect(cats.has(c as never)).toBe(true)
   })
 
-  it('uses well-formed Google Fonts css2 addresses', () => {
+  it('has well-formed ids and no address that leaves the package', () => {
     for (const f of CURATED_FONTS) {
       expect(f.id).toMatch(/^[a-z0-9-]+$/)
-      expect(f.cssUrl).toMatch(/^https:\/\/fonts\.googleapis\.com\/css2\?family=[A-Za-z0-9+]+(?::wght@[0-9;]+)?&display=swap$/)
-      expect(f.cssUrl).toContain(`family=${f.family.replace(/ /g, '+')}`)
+      expect(f).not.toHaveProperty('cssUrl')
     }
-    expect(fontById('open-sans')?.cssUrl).toBe('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap')
-    expect(fontById('bebas-neue')?.cssUrl).toBe('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap')
+  })
+
+  it('ships every font as woff2 files with its licence text beside them', () => {
+    for (const f of CURATED_FONTS) {
+      expect(f.license).toBe('OFL-1.1')
+      expect(f.files.some((x) => x.subset === 'latin')).toBe(true)
+      expect(existsSync(join(FONTS_DIR, f.id, 'OFL.txt'))).toBe(true)
+      expect(readFileSync(join(FONTS_DIR, f.id, 'OFL.txt'), 'utf8')).toMatch(/SIL OPEN FONT LICENSE/)
+      for (const file of f.files) {
+        expect(file.path.startsWith(`${f.id}/`) && file.path.endsWith('.woff2')).toBe(true)
+        const bytes = readFileSync(join(FONTS_DIR, file.path))
+        expect(bytes.subarray(0, 4).toString('latin1')).toBe('wOF2')
+        expect(bytes.length).toBeGreaterThan(1000)
+        expect(file.unicodeRange.startsWith('U+')).toBe(true)
+      }
+    }
+  })
+
+  it('writes @font-face rules with relative addresses and never a remote one', () => {
+    const css = fontFaceCss(fontById('inter')!)
+    expect(css.match(/@font-face/g)).toHaveLength(4)
+    expect(css).toContain("font-family:'Inter';font-style:normal;font-weight:700;font-display:swap;src:url(./inter/inter-latin-700.woff2) format('woff2')")
+    expect(css).toContain('unicode-range:U+0000-00FF')
+    expect(fontFaceCss(fontById('aldrich')!, '/assets/fonts/')).toContain('url(/assets/fonts/aldrich/aldrich-latin-400.woff2)')
+    expect(allFontFacesCss()).not.toMatch(/https?:|googleapis|gstatic/i)
+    expect(allFontFacesCss()).not.toContain('url(//')
+    for (const bad of ['https://evil.example/', '//evil.example/', 'fonts', "./a'b/", './a b/', 'a:b/', '.../', 'javascript:/', '/a//b/']) {
+      expect(isSafeFontBase(bad)).toBe(false)
+      expect(() => fontFaceCss(fontById('inter')!, bad)).toThrow()
+    }
+    for (const ok of ['', './', '../', '/fonts/', './assets/fonts/', 'fonts/']) expect(isSafeFontBase(ok)).toBe(true)
+  })
+
+  it('keeps the committed fonts/fonts.css in step with the code', () => {
+    expect(readFileSync(join(FONTS_DIR, 'fonts.css'), 'utf8')).toBe(allFontFacesCss('./'))
   })
 
   it('includes Aldrich (single weight) and Roboto Condensed', () => {
     expect(fontById('aldrich')).toMatchObject({ family: 'Aldrich', category: 'display', stack: expect.stringMatching(/^'Aldrich', /) })
-    expect(fontById('aldrich')?.cssUrl).toBe('https://fonts.googleapis.com/css2?family=Aldrich&display=swap')
+    expect(fontById('aldrich')?.files.map((f) => f.weight)).toEqual([400])
     expect(fontById('roboto-condensed')?.family).toBe('Roboto Condensed')
-    expect(fontById('roboto-condensed')?.cssUrl).toBe('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap')
+    expect(fontById('roboto-condensed')?.files.map((f) => f.weight)).toContain(700)
     expect(isCuratedStack(fontById('aldrich')?.stack)).toBe(true)
     expect(isCuratedStack(fontById('roboto-condensed')?.stack)).toBe(true)
   })
@@ -45,8 +81,6 @@ describe('CURATED_FONTS', () => {
     expect(fontById(undefined)).toBeUndefined()
     expect(isCuratedStack(fontById('inter')?.stack)).toBe(true)
     expect(isCuratedStack("'Inter', sans-serif; } body { background: red")).toBe(false)
-    expect(isCuratedCssUrl(fontById('lato')?.cssUrl)).toBe(true)
-    expect(isCuratedCssUrl('https://evil.example/x.css')).toBe(false)
   })
 
   it('cannot be modified at run time', () => {

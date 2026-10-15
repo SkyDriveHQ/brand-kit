@@ -63,7 +63,6 @@ describe('deriveTheme', () => {
       tagline: 'Jump with us',
       website: 'https://testharness.example',
       headingFont: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-      headingFontCss: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap',
       poweredBy: { label: 'Powered by SkyDrive', href: 'https://skydrive.example/' },
     })
     expect(t.colors.accent).toBe('#1a73e8')
@@ -87,7 +86,6 @@ describe('deriveTheme', () => {
     for (const surface of ['email', 'pdf', 'print'] as const) {
       const t = deriveTheme(fullKit(), identity, { surface, fallbackName: 'x' })
       expect(t.headingFont).toBeNull()
-      expect(t.headingFontCss).toBeNull()
     }
     expect(deriveTheme(fullKit(), identity, { surface: 'tv', fallbackName: 'x' }).headingFont).not.toBeNull()
   })
