@@ -20,6 +20,15 @@ describe('CURATED_FONTS', () => {
     expect(fontById('bebas-neue')?.cssUrl).toBe('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap')
   })
 
+  it('includes Aldrich (single weight) and Roboto Condensed', () => {
+    expect(fontById('aldrich')).toMatchObject({ family: 'Aldrich', category: 'display', stack: expect.stringMatching(/^'Aldrich', /) })
+    expect(fontById('aldrich')?.cssUrl).toBe('https://fonts.googleapis.com/css2?family=Aldrich&display=swap')
+    expect(fontById('roboto-condensed')?.family).toBe('Roboto Condensed')
+    expect(fontById('roboto-condensed')?.cssUrl).toBe('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap')
+    expect(isCuratedStack(fontById('aldrich')?.stack)).toBe(true)
+    expect(isCuratedStack(fontById('roboto-condensed')?.stack)).toBe(true)
+  })
+
   it('gives every family a fallback stack ending in a generic family, and no characters that could escape CSS', () => {
     for (const f of CURATED_FONTS) {
       expect(f.fallback).toMatch(/(sans-serif|serif|monospace)$/)

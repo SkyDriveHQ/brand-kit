@@ -52,6 +52,9 @@ export const CURATED_FONTS: readonly CuratedFont[] = Object.freeze([
   font('raleway', 'Raleway', 'sans', SANS, '400;700'),
   // Questrial has a single weight.
   font('questrial', 'Questrial', 'sans', SANS, null),
+  font('roboto-condensed', 'Roboto Condensed', 'sans', SANS, '400;700'),
+  // Aldrich has a single weight. Orange Skies' heading font.
+  font('aldrich', 'Aldrich', 'display', SANS, null),
   font('merriweather', 'Merriweather', 'serif', SERIF, '400;700'),
   font('playfair-display', 'Playfair Display', 'serif', SERIF, '400;700'),
   font('source-serif-4', 'Source Serif 4', 'serif', SERIF, '400;700'),

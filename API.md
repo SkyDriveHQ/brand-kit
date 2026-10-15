@@ -50,7 +50,7 @@ Every module is ESM TypeScript with NodeNext resolution, so imports end in `.js`
   - `guidePath(rules, versionId, sha256)` gives `${tenantId}/${versionId}/guide-${sha256}.pdf`.
   - `isOwnPublicAssetUrl(url, rules): boolean` requires https, the exact origin, the public bucket and the tenant prefix, with a file name of 64 hex characters plus `.png`, no `..`, and no query or credentials.
 - **`fonts.ts`**
-  - `CURATED_FONTS: readonly { id; family; fallback; category: 'sans' | 'serif' | 'display' | 'mono'; cssUrl }[]` holds about 12 SIL Open Font Licence Google Fonts.
+  - `CURATED_FONTS: readonly { id; family; fallback; category: 'sans' | 'serif' | 'display' | 'mono'; cssUrl }[]` holds 15 SIL Open Font Licence Google Fonts.
   - `cssUrl` is the `https://fonts.googleapis.com/css2?family=...&display=swap` address.
   - `fontById(id)` looks one up.
 - **`theme.ts`**
