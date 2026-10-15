@@ -50,7 +50,7 @@ Every module is ESM TypeScript with NodeNext resolution, so imports end in `.js`
   - `guidePath(rules, versionId, sha256)` gives `${tenantId}/${versionId}/guide-${sha256}.pdf`.
   - `isOwnPublicAssetUrl(url, rules): boolean` requires https, the exact origin, the public bucket and the tenant prefix, with a file name of 64 hex characters plus `.png`, no `..`, and no query or credentials.
 - **`fonts.ts`**
-  - `CURATED_FONTS: readonly { id; family; fallback; category: 'sans' | 'serif' | 'display' | 'mono'; cssUrl }[]` holds 15 SIL Open Font Licence families, each with `license` and `files` (woff2 files under the package's `fonts/` folder).
+  - `CURATED_FONTS: readonly { id; family; fallback; category: 'sans' | 'serif' | 'display' | 'mono'; license; files }[]` holds 15 SIL Open Font Licence families, each with `license` and `files` (woff2 files under the package's `fonts/` folder).
   - `fontFaceCss(font, base = './')` writes the `@font-face` rules for one font, one per file with its unicode range, addressed `base + path`. `base` must be a relative folder address ending in `/` (`isSafeFontBase`); anything else throws. `allFontFacesCss(base)` does every font and is what `fonts/fonts.css` holds.
   - `fontById(id)` looks one up.
 - **`theme.ts`**
