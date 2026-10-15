@@ -250,11 +250,7 @@ export interface ApplyOptions {
   fallbackName: string
   /** Whether to show `ProductIdentity.poweredByLabel`. Default true. */
   showPoweredBy?: boolean
-  /**
-   * The heading font is served by the site itself (its own `@font-face`). The theme then carries no
-   * stylesheet address (`headingFontCss` is null) and `--brand-font-heading` is still emitted. Default
-   * false: the font loads from Google Fonts.
-   */
+  /** @deprecated Does nothing. Heading fonts are always self-hosted now; see `fontFaceCss`. */
   selfHostedFonts?: boolean
 }
 
@@ -291,8 +287,6 @@ export interface BrandTheme {
   colors: ThemeColors
   /** CSS font-family for headings on web surfaces; null means use the product's own. */
   headingFont: string | null
-  /** A stylesheet URL to load for `headingFont`, or null. */
-  headingFontCss: string | null
   poweredBy: { label: string; href: string | null } | null
   /** What was changed to make the kit readable on this surface, and any warnings. Shown in the preview. */
   problems: KitProblem[]

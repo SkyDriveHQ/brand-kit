@@ -1,6 +1,6 @@
 {
   "name": "@skydrivehq/brand-kit",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "The customer brand-kit drop-in engine shared by Stratica products. A customer drops in their own brand kit (logos, colours, a heading font, their brand guide); the product stores it in its own database and applies it to the screens, emails and documents its customers see.",
   "type": "module",
   "license": "UNLICENSED",
@@ -31,16 +31,19 @@
       "default": "./dist/node/index.js"
     },
     "./react/styles.css": "./dist/react/styles.css",
+    "./fonts/fonts.css": "./fonts/fonts.css",
+    "./fonts/*": "./fonts/*",
     "./sql/brand_kit.sql": "./sql/brand_kit.sql"
   },
   "files": [
     "dist",
+    "fonts",
     "src",
     "sql",
     "README.md"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && node scripts/copy-assets.mjs",
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-assets.mjs && node scripts/make-fonts-css.mjs",
     "prepare": "npm run build",
     "typecheck": "tsc -p tsconfig.core.json --noEmit && tsc -p tsconfig.json --noEmit",
     "test": "vitest run"

@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import sharp from 'sharp'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { loadKitFromDir, prepareLogoFile } from '../src/node/index.js'
+import { copyFontFiles, loadKitFromDir, prepareLogoFile } from '../src/node/index.js'
 import { analysePixels } from '../src/core/analyse.js'
 import { fileStoreRules, isFileStorePath, isOwnPrivatePath, isOwnPublicAssetUrl } from '../src/core/paths.js'
 import { deriveTheme } from '../src/core/theme.js'
@@ -173,15 +173,24 @@ describe('self-hosted fonts', () => {
   it('has Questrial in the curated list', () => {
     expect(fontById('questrial')?.stack).toMatch(/^'Questrial', /)
   })
-  it('emits the font variable and no Google address when self-hosted', () => {
-    const theme = deriveTheme(kit, identity, { surface: 'web-light', fallbackName: 'S', selfHostedFonts: true })
-    expect(theme.headingFontCss).toBeNull()
-    const css = themeCssText(theme)
+  it('writes @font-face with a relative address and no remote address when given a font folder', () => {
+    const theme = deriveTheme(kit, identity, { surface: 'web-light', fallbackName: 'S' })
+    const css = themeCssText(theme, ':root', { fontBase: './fonts/' })
     expect(css).toContain('--brand-font-heading:')
+    expect(css).toContain("@font-face{font-family:'Questrial'")
+    expect(css).toContain('url(./fonts/questrial/questrial-latin-400.woff2)')
     expect(css).not.toMatch(/googleapis|gstatic|https?:/)
   })
-  it('still loads from Google by default', () => {
+  it('writes no @font-face without a font folder, and none for a theme with no curated font', () => {
     const theme = deriveTheme(kit, identity, { surface: 'web-light', fallbackName: 'S' })
-    expect(theme.headingFontCss).toMatch(/^https:\/\/fonts\.googleapis\.com\//)
+    expect(themeCssText(theme)).not.toContain('@font-face')
+    const none = deriveTheme({ colors: {}, fonts: {}, logos: {} } as unknown as BrandKit, identity, { surface: 'web-light', fallbackName: 'S' })
+    expect(themeCssText(none, ':root', { fontBase: './fonts/' })).not.toContain('@font-face')
+  })
+  it('copies the files and licence of a font into a site folder', async () => {
+    const dest = join(tmp, 'site-fonts')
+    const written = await copyFontFiles(fontById('aldrich')!, dest)
+    expect(written.map((p) => p.replaceAll('\\', '/').split('/').slice(-2).join('/'))).toEqual(['aldrich/aldrich-latin-400.woff2', 'aldrich/OFL.txt'])
+    expect((await readFile(join(dest, 'aldrich', 'aldrich-latin-400.woff2'))).subarray(0, 4).toString('latin1')).toBe('wOF2')
   })
 })

@@ -60,7 +60,7 @@ central brand service at run time (suite Rule 13). Each product:
 ## Install
 
 ```sh
-npm install github:SkyDriveHQ/brand-kit#v0.2.1
+npm install github:SkyDriveHQ/brand-kit#v0.3.0
 ```
 
 The repo is public and installed by tag, like `suite-contracts`. The package builds itself on install, and no
@@ -105,17 +105,22 @@ const { kit } = await loadKitFromDir('./brand', { publicBase: 'https://example.c
   leave the folder are refused. The default Supabase rules are unchanged.
 - `prepareLogoFile(path, slot, outDir)` is `prepareLogo` for Node: same checks, sizes and result, using `sharp`
   (optional peer: `npm install sharp`). An SVG is rasterised and never served.
-- Self-hosted heading font: pass `selfHostedFonts: true` to `deriveTheme`. `--brand-font-heading` is still set and
-  no Google Fonts address is returned. Questrial, Aldrich and Roboto Condensed are in the curated list.
-- `brand-kit-css <kitDir> --surface web-light [--selector :root] [--self-hosted-fonts] > kit.css` prints the theme CSS.
+- Heading fonts are self-hosted. Every curated font ships in this package as woff2 files under `fonts/<id>/`, with
+  its licence text (`OFL.txt`) beside them. Nothing loads from Google's servers.
+  - Bundled apps: `import '@skydrivehq/brand-kit/fonts/fonts.css'` once. It declares every font with relative
+    addresses; the bundler emits the files, and a browser only fetches the ones a page uses.
+  - Static sites: `themeCssText(theme, ':root', { fontBase: '/fonts/' })` puts the chosen font's `@font-face` rules
+    before the variables, and `copyFontFiles(font, dir)` copies its files into the folder served at `fontBase`.
+  - `brand-kit-css <kitDir> --surface web-light [--selector :root] [--font-base ./fonts/] [--copy-fonts <dir>] > kit.css`
+    does both: it prints the theme CSS with the `@font-face` and copies the font's files into `<dir>`.
+  - The drop-in screen takes `fontBase` (where `fonts/` is served from) for its previews, or relies on `fonts.css`.
 
-## Known gaps (v0.2)
+## Known gaps
 
 - **The SQL template has never been applied anywhere.** Apply it to a branch first and run the checks in its
   header.
 - **No server-side check of uploaded PNGs or of publishing yet.** For that, publish through an edge function
   that runs `publishProblems(version, rules)` and `checkPng`; core runs in Deno.
-- **Heading fonts load from Google's servers by default.** `selfHostedFonts: true` turns that off; the site supplies the `@font-face`.
 - **The canvas pipeline is unit-tested with a fake canvas.** It was checked in real Chrome on 2026-10-02 with
   `smoke/index.html`: a PNG trimmed to 6:1 with its two brand colours extracted and all 5 sizes made; an SVG
   with `<script>` and `onload` cleaned and all 7 icon sizes made; a hostile SVG refused. Firefox and Safari

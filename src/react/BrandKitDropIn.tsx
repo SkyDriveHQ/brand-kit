@@ -14,10 +14,13 @@ import {
   TEXT_LIMITS,
   deriveTheme,
   fontById,
+  fontFaceCss,
+  isSafeFontBase,
   parseHex,
   parseKit,
 } from '../core/index.js'
 import type {
+  CuratedFont,
   ApplyOptions,
   BrandKit,
   BrandKitVersion,
@@ -48,8 +51,12 @@ export interface BrandKitDropInProps {
   surfaces?: readonly Surface[]
   showPoweredBy?: boolean
   onPublished?: (version: BrandKitVersion) => void
-  /** Load the chosen heading font's stylesheet from Google Fonts for the previews. Default true. */
-  loadFonts?: boolean
+  /**
+   * Where the package's `fonts/` folder is served from (a relative folder address ending in `/`, such as
+   * `/fonts/`), so the previews can draw the chosen heading font. Leave it out when the product already
+   * imports `@skydrivehq/brand-kit/fonts/fonts.css`, which declares every font.
+   */
+  fontBase?: string
   /** Delay before text edits are saved. Default 600 ms. */
   debounceMs?: number
   className?: string
@@ -560,24 +567,20 @@ function History({ bk }: { bk: UseBrandKit }): ReactElement {
 // ------------------------------------------------------------------------------------------------ fonts
 
 /**
- * Add the chosen curated font's stylesheet to the document head. Done in an effect rather than with React 19's
- * `<link precedence>`, which holds back the whole screen until the stylesheet loads: a slow or blocked Google
- * Fonts request must never stop the customer editing. Only `CURATED_FONTS` addresses ever reach here.
+ * Add the chosen curated font's `@font-face` rules to the document head, pointing at the woff2 files in this
+ * package (served by the product from `base`). Only `CURATED_FONTS` data and a validated `base` ever reach
+ * the style text. The files are the product's own, so a slow or blocked request can never stop editing.
  */
-function useCuratedFontStylesheet(href: string | undefined): void {
+function useCuratedFontFaces(font: CuratedFont | undefined, base: string | undefined): void {
   useEffect(() => {
-    if (!href || typeof document === 'undefined') return
-    const existing = Array.from(document.head.querySelectorAll('link[rel="stylesheet"]')).some(
-      (l) => l.getAttribute('href') === href,
-    )
-    if (existing) return
-    const link = document.createElement('link')
-    link.rel = 'stylesheet'
-    link.href = href
-    link.dataset.bkFont = 'true'
-    document.head.appendChild(link)
-    return () => link.remove()
-  }, [href])
+    if (!font || !isSafeFontBase(base) || typeof document === 'undefined') return
+    const css = fontFaceCss(font, base)
+    const style = document.createElement('style')
+    style.dataset.bkFont = font.id
+    style.textContent = css
+    document.head.appendChild(style)
+    return () => style.remove()
+  }, [font, base])
 }
 
 // ------------------------------------------------------------------------------------------------ the screen
@@ -585,7 +588,6 @@ function useCuratedFontStylesheet(href: string | undefined): void {
 export function BrandKitDropIn(props: BrandKitDropInProps): ReactElement {
   const { store, identity, rules, fallbackName, onPublished } = props
   const surfaces = props.surfaces ?? DEFAULT_PREVIEW_SURFACES
-  const loadFonts = props.loadFonts ?? true
   const hookOptions = props.debounceMs === undefined ? { rules } : { rules, debounceMs: props.debounceMs }
   const bk = useBrandKit(store, hookOptions)
   const id = useId()
@@ -616,7 +618,7 @@ export function BrandKitDropIn(props: BrandKitDropInProps): ReactElement {
     parsed.problems.find((p) => p.field === field && p.severity === 'refused')?.message ?? null
 
   const font = bk.kit.fonts.heading ? fontById(bk.kit.fonts.heading) : undefined
-  useCuratedFontStylesheet(loadFonts ? font?.cssUrl : undefined)
+  useCuratedFontFaces(font, props.fontBase)
   const unbranded = isUnbranded(parsed.kit)
   const shownName = parsed.kit.name ?? fallbackName
 
